@@ -14,32 +14,19 @@
 
 'use strict';
 
-const rclnodejs = require('bindings')('rclnodejs');
+const rclnodejs = require('../index.js');
 
-class Publisher {
-  constructor(handle, messageType, messageName, topic) {
-    this._handle = handle;
-    this._messageName = messageName;
-    this._topic = topic;
-  }
+rclnodejs.init();
 
-  get handle() {
-    return this._handle;
-  }
+let node = rclnodejs.createNode('publisher_example_node');
 
-  get topic() {
-    return this._topic;
-  }
+let publisher = node.createPublisher();
 
-  publish(message) {
+let counter = 0;
+setInterval(function() {
+  publisher.publishStringMessage('hello rclnodejs ' + counter++);
+}, 100);
 
-  }
+rclnodejs.spin(node);
 
-  publishStringMessage(str) {
-    console.log('publishing message', str);
-    rclnodejs.rcl_publish_std_string_message(this._handle, str);
-    console.log('after publishing message', str);
-  }
-};
-
-module.exports = Publisher;
+//rclnodejs.shutdown();
