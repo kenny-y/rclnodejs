@@ -122,6 +122,10 @@ void DestroyEntity(const Nan::FunctionCallbackInfo<v8::Value>& info) {
     ret = rcl_timer_fini(timer);
   }
 
+  if (0 == strcmp(type, "publisher")) {
+    // TODO:
+  }
+
   if (ret != RCL_RET_OK) {
     Nan::ThrowError(rcl_get_error_string_safe());
   }
