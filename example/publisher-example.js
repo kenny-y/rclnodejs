@@ -20,13 +20,16 @@ rclnodejs.init();
 
 let node = rclnodejs.createNode('publisher_example_node');
 
-let publisher = node.createPublisher();
+let messageType = undefined;
+let publisher = node.createPublisher(messageType, 'topic');
 
 let counter = 0;
 setInterval(function() {
-  publisher.publishStringMessage('hello rclnodejs ' + counter++);
+  const message = 'hello rclnodejs ' + counter++;
+  console.log('Publishing message:', message);
+  publisher.publishStringMessage(message);
 }, 100);
 
 rclnodejs.spin(node);
 
-//rclnodejs.shutdown();
+// rclnodejs.shutdown();

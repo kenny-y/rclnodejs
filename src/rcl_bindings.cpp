@@ -23,11 +23,6 @@
 #include "shadow_node.hpp"
 #include "rcl_handle.hpp"
 
-// TODO: remove this temp header
-#include <std_msgs/msg/string.h>
-#include <rosidl_generator_c/message_type_support_struct.h>
-#include <rosidl_generator_c/string_functions.h>
-
 namespace rclnodejs {
 
 void Init(const Nan::FunctionCallbackInfo<v8::Value>& info) {
@@ -87,34 +82,6 @@ void CreateTimer(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   }
 
   info.GetReturnValue().Set(rclnodejs::RclHandle::NewInstance(timer));
-}
-
-NAN_METHOD(CreatePublisher) {
-  rcl_node_t* node = reinterpret_cast<rcl_node_t*>(
-      rclnodejs::RclHandle::Unwrap<rclnodejs::RclHandle>(
-      info[0]->ToObject())->GetPtr());
-
-  rcl_publisher_t* publisher = reinterpret_cast<rcl_publisher_t*>(
-      malloc(sizeof(rcl_publisher_t)));
-  *publisher = rcl_get_zero_initialized_publisher();
-
-  const rosidl_message_type_support_t * ts = ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String);
-  rcl_publisher_options_t publisher_ops = rcl_publisher_get_default_options();
-  rcl_publisher_init(publisher, node, ts, "topic", &publisher_ops);
-
-  info.GetReturnValue().Set(rclnodejs::RclHandle::NewInstance(publisher));
-}
-
-NAN_METHOD(rcl_publish_std_string_message) {
-  rcl_publisher_t* publisher = reinterpret_cast<rcl_publisher_t*>(
-    rclnodejs::RclHandle::Unwrap<rclnodejs::RclHandle>(
-    info[0]->ToObject())->GetPtr());
-
-  std_msgs__msg__String msg;
-  std_msgs__msg__String__init(&msg);
-  rosidl_generator_c__String__assign(&msg.data, *Nan::Utf8String(info[1]->ToString()));
-
-  rcl_publish(publisher, &msg);
 }
 
 void IsTimerReady(const Nan::FunctionCallbackInfo<v8::Value>& info) {
@@ -335,8 +302,6 @@ BindingMethod binding_methods[] = {
   {"init", Init},
   {"createNode", CreateNode},
   {"createTimer", CreateTimer},
-  {"createPublisher", CreatePublisher},
-  {"rcl_publish_std_string_message", rcl_publish_std_string_message},
   {"isTimerReady", IsTimerReady},
   {"destroyEntity", DestroyEntity},
   {"callTimer", CallTimer},
@@ -345,6 +310,11 @@ BindingMethod binding_methods[] = {
   {"resetTimer", ResetTimer},
   {"timerGetTimeSinceLastCall", TimerGetTimeSinceLastCall},
   {"timerGetTimeUntilNextCall", TimerGetTimeUntilNextCall},
+
+  {"createPublisher", CreatePublisher},
+  {"rcl_publish_std_string_message", rcl_publish_std_string_message},
+  {"publishMessage", PublishMessage},
+
   {"spin", Spin},
   {"shutdown", Shutdown},
   {"", nullptr}
