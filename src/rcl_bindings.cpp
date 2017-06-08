@@ -16,7 +16,6 @@
 
 #include <rcl/error_handling.h>
 #include <rcl/node.h>
-#include <rcl/publisher.h>
 #include <rcl/rcl.h>
 
 #include "handle_manager.hpp"

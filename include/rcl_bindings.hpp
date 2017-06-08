@@ -40,6 +40,7 @@ uint32_t GetBindingMethodsCount(BindingMethod* methods);
 
 extern BindingMethod binding_methods[];
 
+// Publisher methods
 NAN_METHOD(CreatePublisher);
 NAN_METHOD(rcl_publish_std_string_message); // Temp method
 NAN_METHOD(PublishMessage);
