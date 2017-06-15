@@ -17,47 +17,74 @@
 const fs = require('mz/fs');
 const mkdirp = require('mkdirp');
 const path = require('path');
-
 const message = require('../rosidl_gen/message.js');
 
-const rosInstallPath = process.env.AMENT_PREFIX_PATH;
-const basePath = rosInstallPath + '/share/';
+const generatedFilesDir = path.join(__dirname, '../generated/');
+mkdirp.sync(generatedFilesDir);
 
-fs.readdir(basePath).then((list) => {
-  const msgs = list.filter((item) => {
-    return item.substring(item.length - 5) == '_msgs' || item.substring(item.length - 18) === 'builtin_interfaces';
-  });
+function isMessageDir(dir) {
+  return dir.substring(dir.length - 5) === '_msgs' || dir.substring(dir.length - 18) === 'builtin_interfaces';
+}
 
-  let all = [];
-  msgs.forEach((item) => {
-    const dir = basePath + item + '/msg';
-    if (fs.existsSync(dir)) {
-      fs.readdir(dir).then((list) => {
-        list.forEach((name) => {
-          const type = message.getMessageType(item, 'msg', name);
-          if (message.existsSync(basePath, type)) {
-            all.push(message.generateMessage(basePath, type));
-          } else {
-            console.log("");
+function isMessageFile(file) {
+  return file.substring(file.length - 4) === '.msg';
+}
+
+function generateAllMessages(basePath) {
+  return new Promise((resolve, reject) => {
+    fs.readdir(basePath).then((rawDirList) => {
+      let msgTypeList = [];
+
+      let waitList = [];
+      rawDirList.filter(isMessageDir).forEach((item) => {
+        const dir = basePath + item + '/msg';
+        waitList.push(fs.exists(dir).then((present) => {
+          if (present) {
+            return fs.readdir(dir);
           }
-        });
+          return [];
+        }).then((rawFileList) => {
+          /* eslint-disable max-nested-callbacks */
+          rawFileList.filter(isMessageFile).forEach((name) => {
+            const msgType = message.getMessageType(item, 'msg', name);
+            msgTypeList.push(msgType);
+          });
+        }));
       });
-    } // fs.existsSync
+
+      Promise.all(waitList).then(() => {
+        let msgWaitList = [];
+        msgTypeList.forEach((msgType) => {
+          msgWaitList.push(message.generateMessage(basePath, msgType));
+        });
+
+        return Promise.all(msgWaitList);
+      }).then((e) => {
+        resolve(msgTypeList);
+      }).catch((e) => {
+        reject(e);
+      });
+    }); // fs.readdir
   });
+};
 
-  // const srvs = list.filter((item) => {
-  //   return item.substring(item.length - 5) == '_srvs';
-  // });
-  // // console.log(srvs);
+const generator = {
+  scanPath: undefined,
 
-  // srvs.forEach((item) => {
-  //   const dir = basePath + item + '/srv';
-  //   fs.readdir(dir).then((list) => {
-  //     counter += list.length;
-  //     // console.log(item + ':' + list);
-  //     // console.log(counter);
-  //     // console.log('');
-  //   });
-  // });
+  getMessageType: message.getMessageType,
 
-});
+  getMessageClass: function(msgType) {
+    const file = msgType.pkgName + '__' + msgType.msgSubfolder + '__' + msgType.msgName + '.js';
+    return require(generatedFilesDir + file);
+  },
+
+  generateAll: function() {
+    if (!this.scanPath) {
+      const rosInstallPath = process.env.AMENT_PREFIX_PATH;
+      this.scanPath = rosInstallPath + '/share/';
+    }
+    return generateAllMessages(this.scanPath);
+  },
+};
+
+module.exports = generator;

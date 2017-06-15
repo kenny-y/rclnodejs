@@ -28,13 +28,11 @@ dot.log = process.env.RCLNODEJS_LOG_VERBOSE || false;
 const dots = dot.process({path: path.join(__dirname, '../rosidl_gen/templates')});
 
 const removeExtraSpaceLines = function(str) {
-  /* eslint-disable indent */
   return str.replace(/([ \t]*\n){2,}/g, '\n');
-  /* eslint-enable indent */
 };
 
 function generateMessageSourceCode(messageType, spec) {
-  const className = getClassName(messageType, spec);;
+  const className = getClassName(messageType, spec);
   const generated = removeExtraSpaceLines(dots.message({
     className: className,
     msgType: messageType,
@@ -49,8 +47,8 @@ function getClassName(msgType, spec) {
   return spec.baseType.pkgName + '__' + msgType.msgSubfolder + '__' + spec.msgName;
 }
 
-function __discard_generateMessageStructure(messageType, spec) {
-  const className = getClassName(messageType, spec);;
+function __discardGenerateMessageStructure(messageType, spec) {
+  const className = getClassName(messageType, spec);
   const generated = removeExtraSpaceLines(dots.message({
     className: className,
     msgType: messageType,
@@ -66,7 +64,7 @@ function __discard_generateMessageStructure(messageType, spec) {
 }
 
 function createMessageObjectFromSpec(messageType, spec) {
-  const code = __discard_generateMessageStructure(messageType, spec);
+  const code = __discardGenerateMessageStructure(messageType, spec);
   return requireFromString(code);
 }
 
@@ -83,10 +81,6 @@ const generatedFilesDir = path.join(__dirname, '../generated/');
 mkdirp.sync(generatedFilesDir);
 
 const message = {
-  existsSync: function(basePath, messageType) {
-    return fs.existsSync(getMessagePath(basePath, messageType));
-  },
-
   calcMessageFileName: function(messageType) {
     return getMessageFileName(messageType);
   },
@@ -105,10 +99,11 @@ const message = {
     return new Promise(function(resolve, reject) {
       parser.parseMessageFile(messageType.pkgName, packagePath).then((spec) => {
         const code = generateMessageSourceCode(messageType, spec);
-        const className = getClassName(messageType, spec);;
+        const className = getClassName(messageType, spec);
         const fileName = generatedFilesDir + className + '.js';
-        fs.writeFileSync(fileName, code); // This one is faster, but why...
-        resolve('success');
+        return fs.writeFile(fileName, code);
+      }).then(() => {
+        resolve();
       }).catch((e) => {
         reject(e);
       });

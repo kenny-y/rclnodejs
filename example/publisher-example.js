@@ -18,20 +18,16 @@
 'use strict';
 
 const rclnodejs = require('../index.js');
-const message = rclnodejs.message;
+const {message} = rclnodejs;
 
-rclnodejs.init();
+rclnodejs.init().then(() => {
+  const node = rclnodejs.createNode('publisher_example_node');
 
-const node = rclnodejs.createNode('publisher_example_node');
+  const messageType = message.getMessageType('std_msgs', 'msg', 'String');
+  const publisher = node.createPublisher(messageType, 'topic');
 
-const messageType = message.getMessageType('std_msgs', 'msg', 'String');
-const publisher = node.createPublisher(messageType, 'topic');
-
-const rosInstallPath = process.env.AMENT_PREFIX_PATH;
-const packagePath = rosInstallPath + '/share/';
-
-message.getMessage(packagePath, messageType).then((Message) => {
-  var msg = new Message();
+  const StringMessage = message.getMessageClass(messageType);
+  var msg = new StringMessage();
 
   let counter = 0;
   setInterval(function() {
@@ -39,9 +35,9 @@ message.getMessage(packagePath, messageType).then((Message) => {
     console.log('Publishing message:', str);
 
     msg.data = str;
-    publisher.publish(Message.getRefBuffer(msg));
+    publisher.publish(StringMessage.getRefBuffer(msg));
   }, 10);
-});
 
-rclnodejs.spin(node);
-// rclnodejs.shutdown();
+  rclnodejs.spin(node);
+  // rclnodejs.shutdown();
+});
