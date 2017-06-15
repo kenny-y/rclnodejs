@@ -24,15 +24,13 @@ rclnodejs.init();
 
 const node = rclnodejs.createNode('publisher_example_node');
 
-const messageType = {
-  pkgName: 'std_msgs',
-  msgSubfolder: 'msg',
-  msgName: 'String',
-};
-
+const messageType = message.getMessageType('std_msgs', 'msg', 'String');
 const publisher = node.createPublisher(messageType, 'topic');
 
-message.createMessage(messageType).then((Message) => {
+const rosInstallPath = process.env.AMENT_PREFIX_PATH;
+const packagePath = rosInstallPath + '/share/';
+
+message.getMessage(packagePath, messageType).then((Message) => {
   var msg = new Message();
 
   let counter = 0;
