@@ -34,7 +34,7 @@ const {{=generatorName}} = StructType({
     if (field.type.isPrimitiveType) {
       type = 'primitiveTypes.' + field.type.type;
     } else {
-      type = "require('../generated/" + calcFileNameFromType(field.type) + "').refType";
+      type = "require('../generated/" + calcFileNameFromType(field.type) + "').RefType";
     }
   }}
   {{=field.name}}: {{=type}},
@@ -63,7 +63,7 @@ class {{=className}} {
 
 }
 
-{{=className}}.refType = {{=generatorName}};
+{{=className}}.RefType = {{=generatorName}};
 
 {{=className}}.getRefBuffer = function(msg) {
   return msg.__ref_message.ref();
