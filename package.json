@@ -8,6 +8,7 @@
     "ros2"
   ],
   "scripts": {
+    "preinstall": "git submodule update --init --recursive",
     "install": "node-gyp rebuild",
     "docs": "cd docs && make",
     "test": "node ./scripts/run_test.js",
