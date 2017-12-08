@@ -5,6 +5,7 @@
 
 'use strict';
 
+const rclnodejs = require('bindings')('rclnodejs');
 const StructType = require('ref-struct');
 const ref = require('ref');
 const ArrayType = require('ref-array');
@@ -215,7 +216,7 @@ const {{=PlainRefArrayType}} = ArrayType('{{=currentTypedArrayElementType}}');
 {{?}}
 const {{=refObjectArrayType}} = StructType({
 {{? usePlainTypedArray }}
-  data: {{=PlainRefArrayType}},
+  data: ref.refType(ref.types.{{=currentTypedArrayElementType}}),
 {{?? true}}
   data: {{=refArrayType}},
 {{?}}
@@ -423,7 +424,12 @@ class {{=arrayWrapper}} {
 
   fill(values) {
     {{? usePlainTypedArray }}
-    this._wrappers = values;
+    if (Array.isArray(values)) {
+      // Convert JavaScript array
+      this._wrappers = new {{=currentTypedArray}}(values);
+    } else {
+      this._wrappers = values;
+    }
     {{?? isPrimitivePackage(it.spec.baseType) }}
     // Now only for string/bool array
     const length = values.length;
@@ -442,12 +448,10 @@ class {{=arrayWrapper}} {
     {{?}}
   }
 
+  // Put all data currently stored in `this._wrappers` into `this._refObject`
   freeze(own) {
     {{? usePlainTypedArray }}
-    this._refArray = new {{=PlainRefArrayType}}(this._wrappers.length);
-    for (let i = 0; i < this._wrappers.length; ++i) {
-      this._refArray[i] = this._wrappers[i];
-    }
+    // When it's a TypedArray: no need to copy to `this._refArray`
     {{?? true}}
     this._wrappers.forEach((wrapper, index) => {
       wrapper.freeze(own);
@@ -456,7 +460,12 @@ class {{=arrayWrapper}} {
     {{?}}
     this._refObject.size = this._wrappers.length;
     this._refObject.capacity = this._wrappers.length;
+    {{? usePlainTypedArray }}
+    const buffer = Buffer.from(new Uint8Array(this._wrappers.buffer));
+    this._refObject.data = buffer;
+    {{?? true}}
     this._refObject.data = this._refArray.buffer;
+    {{?}}
   }
 
   get refObject() {
@@ -500,7 +509,7 @@ class {{=arrayWrapper}} {
       return;
     }
     {{? usePlainTypedArray }}
-    this._refArray = new {{=PlainRefArrayType}}(size);
+    this._refArray = undefined;
     {{?? true }}
     this._refArray = new {{=refArrayType}}(size);
     {{?}}
@@ -518,17 +527,18 @@ class {{=arrayWrapper}} {
     {{?}}
   }
 
+  // Copy all data from `this._refObject` into `this._wrappers`
   copyRefObject(refObject) {
     this._refObject = refObject;
-    const refObjectArray = this._refObject.data;
 
     {{? usePlainTypedArray }}
-    this._refArray = new {{=PlainRefArrayType}}(refObject.size);
-    this._wrappers = new {{=currentTypedArray}}(refObject.size);
-    for (let i = 0; i < this._wrappers.length; ++i) {
-      this._wrappers[i] = refObjectArray[i];
-    }
+    const byteLen = refObject.size * ref.types.{{=currentTypedArrayElementType}}.size;
+    // An ArrayBuffer object that doesn't hold the ownership of the address
+    const arrayBuffer = rclnodejs.createArrayBufferFromAddress(refObject.data.address(), byteLen);
+    //this._arrayBufferHandle = rclnodejs.createArrayBufferHandle(refObject.data.address(), byteLen);
+    this._wrappers = new {{=currentTypedArray}}(arrayBuffer);
     {{?? true }}
+    let refObjectArray = this._refObject.data;
     refObjectArray.length = this._refObject.size;
     this._resize(this._refObject.size);
 
@@ -544,12 +554,10 @@ class {{=arrayWrapper}} {
     }
 
     this._resize(other.size);
-    // Array deep copy
     {{? usePlainTypedArray }}
-    for (let i = 0; i < this._wrappers.length; ++i) {
-      this._wrappers[i] = other._wrappers[i];
-    }
+    this._wrappers = other._wrappers.slice();
     {{?? true }}
+    // Array deep copy
     other._wrappers.forEach((wrapper, index) => {
       this._wrappers[index].copy(wrapper);
     });
@@ -557,11 +565,15 @@ class {{=arrayWrapper}} {
   }
 
   static freeArray(refObject) {
+    {{? usePlainTypedArray }}
+    // TODO: save TypedArray buffer in handle
+    {{?? true }}
     let refObjectArray = refObject.data;
     refObjectArray.length = refObject.size;
     for (let index = 0; index < refObject.size; index++) {
       {{=objectWrapper}}.freeStruct(refObjectArray[index]);
     }
+    {{?}}
   }
 
   static get elementType() {

@@ -715,6 +715,28 @@ NAN_METHOD(FreeMemeoryAtOffset) {
   info.GetReturnValue().Set(Nan::Undefined());
 }
 
+NAN_METHOD(CreateArrayBufferFromAddress) {
+  uint64_t address = Nan::To<int64_t>(info[0]).FromJust();
+  int32_t length = Nan::To<int64_t>(info[1]).FromJust();
+
+  auto array_buffer = v8::ArrayBuffer::New(
+      v8::Isolate::GetCurrent(), reinterpret_cast<void*>(address), length,
+      v8::ArrayBufferCreationMode::kExternalized);
+
+  info.GetReturnValue().Set(array_buffer);
+}
+
+NAN_METHOD(CreateArrayBufferHandle) {
+  uint64_t address = Nan::To<int64_t>(info[0]).FromJust();
+
+  info.GetReturnValue().Set(RclHandle::NewInstance(
+      reinterpret_cast<void*>(address),
+      nullptr,
+      [] {
+        return RCL_RET_OK;
+      }));
+}
+
 uint32_t GetBindingMethodsCount(BindingMethod* methods) {
   uint32_t count = 0;
   while (methods[count].function) {
@@ -754,6 +776,8 @@ BindingMethod binding_methods[] = {
     {"getNamespace", GetNamespace},
     {"initString", InitString},
     {"freeMemeoryAtOffset", FreeMemeoryAtOffset},
+    {"createArrayBufferFromAddress", CreateArrayBufferFromAddress},
+    {"createArrayBufferHandle", CreateArrayBufferHandle},
     {"", nullptr}};
 
 }  // namespace rclnodejs
