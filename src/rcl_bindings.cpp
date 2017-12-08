@@ -717,7 +717,7 @@ NAN_METHOD(FreeMemeoryAtOffset) {
 
 NAN_METHOD(CreateArrayBufferFromAddress) {
   uint64_t address = Nan::To<int64_t>(info[0]).FromJust();
-  int32_t length = Nan::To<int64_t>(info[1]).FromJust();
+  int32_t length = Nan::To<int32_t>(info[1]).FromJust();
 
   auto array_buffer = v8::ArrayBuffer::New(
       v8::Isolate::GetCurrent(), reinterpret_cast<void*>(address), length,
@@ -726,11 +726,13 @@ NAN_METHOD(CreateArrayBufferFromAddress) {
   info.GetReturnValue().Set(array_buffer);
 }
 
-NAN_METHOD(CreateArrayBufferHandle) {
+NAN_METHOD(CreateArrayBufferCleaner) {
   uint64_t address = Nan::To<int64_t>(info[0]).FromJust();
+  int32_t offset = Nan::To<int32_t>(info[1]).FromJust();
 
+  uint8_t* target = *reinterpret_cast<uint8_t**>(address + offset);
   info.GetReturnValue().Set(RclHandle::NewInstance(
-      reinterpret_cast<void*>(address),
+      target,
       nullptr,
       [] {
         return RCL_RET_OK;
@@ -777,7 +779,7 @@ BindingMethod binding_methods[] = {
     {"initString", InitString},
     {"freeMemeoryAtOffset", FreeMemeoryAtOffset},
     {"createArrayBufferFromAddress", CreateArrayBufferFromAddress},
-    {"createArrayBufferHandle", CreateArrayBufferHandle},
+    {"createArrayBufferCleaner", CreateArrayBufferCleaner},
     {"", nullptr}};
 
 }  // namespace rclnodejs

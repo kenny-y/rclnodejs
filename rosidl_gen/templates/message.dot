@@ -317,7 +317,11 @@ class {{=objectWrapper}} {
     {{? field.type.isArray}}
     if (refObject.{{=field.name}}.size != 0) {
       {{=getWrapperNameByType(field.type)}}.ArrayType.freeArray(refObject.{{=field.name}});
-      deallocator.freeStructMember(refObject.{{=field.name}}, {{=getWrapperNameByType(field.type)}}.refObjectArrayType, 'data');
+      if ({{=getWrapperNameByType(field.type)}}.refObjectArrayType.useTypedArray) {
+        deallocator.delayFreeStructMember(refObject.{{=field.name}}, {{=getWrapperNameByType(field.type)}}.refObjectArrayType, 'data');
+      } else {
+        deallocator.freeStructMember(refObject.{{=field.name}}, {{=getWrapperNameByType(field.type)}}.refObjectArrayType, 'data');
+      }
     }
     {{?? !field.type.isPrimitiveType || (field.type.type === 'string' && it.spec.msgName !== 'String')}}
     {{=getWrapperNameByType(field.type)}}.freeStruct(refObject.{{=field.name}});
@@ -566,7 +570,7 @@ class {{=arrayWrapper}} {
 
   static freeArray(refObject) {
     {{? usePlainTypedArray }}
-    // TODO: save TypedArray buffer in handle
+    // TODO: save TypedArray buffer in RclHandle when doing `copyRefObject()`
     {{?? true }}
     let refObjectArray = refObject.data;
     refObjectArray.length = refObject.size;
@@ -582,6 +586,10 @@ class {{=arrayWrapper}} {
 
   get isROSArray() {
     return true;
+  }
+
+  get useTypedArray() {
+    return {{=usePlainTypedArray}};
   }
 
   get classType() {
