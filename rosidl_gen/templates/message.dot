@@ -5,13 +5,6 @@
 
 'use strict';
 
-const rclnodejs = require('bindings')('rclnodejs');
-const StructType = require('ref-struct');
-const ref = require('ref');
-const ArrayType = require('ref-array');
-const primitiveTypes = require('../../rosidl_gen/generator_primitive.js');
-const deallocator = require('../../rosidl_gen/deallocator.js');
-
 {{
 let objectWrapper = it.spec.msgName + 'Wrapper';
 let arrayWrapper = it.spec.msgName + 'ArrayWrapper';
@@ -188,6 +181,15 @@ function getPackageNameByType(type) {
 }
 }}
 
+{{? usePlainTypedArray}}
+const rclnodejs = require('bindings')('rclnodejs');
+{{?}}
+const StructType = require('ref-struct');
+const ref = require('ref');
+const ArrayType = require('ref-array');
+const primitiveTypes = require('../../rosidl_gen/generator_primitive.js');
+const deallocator = require('../../rosidl_gen/deallocator.js');
+
 {{~ it.spec.fields :field}}
 {{? shouldRequire(it.spec.baseType, field.type)}}
 let {{=getWrapperNameByType(field.type)}} = require('../../generated/{{=getPackageNameByType(field.type)}}/{{=getJSFileNameByType(field.type)}}');
@@ -317,7 +319,7 @@ class {{=objectWrapper}} {
     {{? field.type.isArray}}
     if (refObject.{{=field.name}}.size != 0) {
       {{=getWrapperNameByType(field.type)}}.ArrayType.freeArray(refObject.{{=field.name}});
-      if ({{=getWrapperNameByType(field.type)}}.refObjectArrayType.useTypedArray) {
+      if ({{=getWrapperNameByType(field.type)}}.ArrayType.useTypedArray) {
         deallocator.delayFreeStructMember(refObject.{{=field.name}}, {{=getWrapperNameByType(field.type)}}.refObjectArrayType, 'data');
       } else {
         deallocator.freeStructMember(refObject.{{=field.name}}, {{=getWrapperNameByType(field.type)}}.refObjectArrayType, 'data');
@@ -539,7 +541,6 @@ class {{=arrayWrapper}} {
     const byteLen = refObject.size * ref.types.{{=currentTypedArrayElementType}}.size;
     // An ArrayBuffer object that doesn't hold the ownership of the address
     const arrayBuffer = rclnodejs.createArrayBufferFromAddress(refObject.data.address(), byteLen);
-    //this._arrayBufferHandle = rclnodejs.createArrayBufferHandle(refObject.data.address(), byteLen);
     this._wrappers = new {{=currentTypedArray}}(arrayBuffer);
     {{?? true }}
     let refObjectArray = this._refObject.data;
@@ -570,7 +571,7 @@ class {{=arrayWrapper}} {
 
   static freeArray(refObject) {
     {{? usePlainTypedArray }}
-    // TODO: save TypedArray buffer in RclHandle when doing `copyRefObject()`
+    // For TypedArray: .data will be 'free()'-ed in parent struct
     {{?? true }}
     let refObjectArray = refObject.data;
     refObjectArray.length = refObject.size;
@@ -588,7 +589,11 @@ class {{=arrayWrapper}} {
     return true;
   }
 
-  get useTypedArray() {
+  static get isROSArray() {
+    return true;
+  }
+
+  static get useTypedArray() {
     return {{=usePlainTypedArray}};
   }
 
