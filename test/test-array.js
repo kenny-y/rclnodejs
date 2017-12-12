@@ -20,7 +20,7 @@ const rclnodejs = require('../index.js');
 const translator = require('../lib/message_translator.js');
 
 function isTypedArray(v) {
-  return ArrayBuffer.isView(v) && !(v instanceof DataView)
+  return ArrayBuffer.isView(v) && !(v instanceof DataView);
 }
 
 describe('rclnodejs message communication', function() {
