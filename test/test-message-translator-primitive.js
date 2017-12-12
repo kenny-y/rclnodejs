@@ -16,6 +16,8 @@
 
 const rclnodejs = require('../index.js');
 const deepEqual = require('deep-equal');
+const arrayGen = require('./array_generator.js');
+
 /* eslint-disable camelcase */
 /* eslint-disable indent */
 
@@ -269,53 +271,34 @@ describe('Rclnodejs message translation: TypedArray large data', function() {
     rclnodejs.shutdown();
   });
 
-  function generateValues(Type, maxLength, range, negative, round, extra) {
-    if (!extra) extra = [];
-    const length = Math.floor(Math.random() * (maxLength -1) + 1);
-    let array = new Type(length + extra.length);
-    for (let i = 0; i < length; ++i) {
-      let value = round(Math.random() * range);
-      if (Math.random() < 0.5) {
-        value = negative(value);
-      }
-      array[i] = value;
-    }
-    for (let i = length; i < length + extra.length; ++i) {
-      array[i] = extra[i - length];
-    }
-    return array;
-  }
-
-  function positive(v) {return v;}
-  function negative(v) {return -v;}
-  function noRound(v) {return v;}
-
   const arrayLength = 100 * 1000;
   [
-    {type: 'ByteMultiArray',    values: generateValues(Uint8Array,   arrayLength, 256, positive, Math.floor)},
-    {type: 'Float32MultiArray', values: generateValues(Float32Array, arrayLength, 100000000, negative, noRound)},
-    {type: 'Float32MultiArray', values: generateValues(Float32Array, arrayLength, 10000, negative, noRound)},
-    {type: 'Float64MultiArray', values: generateValues(Float64Array, arrayLength, Number.MAX_VALUE, negative, noRound)},
-    {type: 'Float64MultiArray', values: generateValues(Float64Array, arrayLength, 10000, negative, noRound)},
-    {type: 'Int8MultiArray',    values: generateValues(Int8Array,    arrayLength, 128, negative, Math.floor)},
-    {type: 'Int16MultiArray',   values: generateValues(Int16Array,   arrayLength, 32768, negative, Math.floor)},
-    {type: 'Int32MultiArray',   values: generateValues(Int32Array,   arrayLength, 2147483648, negative, Math.floor)},
-    {type: 'UInt8MultiArray',   values: generateValues(Uint8Array,   arrayLength, 256, positive, Math.floor)},
-    {type: 'UInt16MultiArray',  values: generateValues(Uint16Array,  arrayLength, 65536, positive, Math.floor)},
-    {type: 'UInt32MultiArray',  values: generateValues(Uint32Array,  arrayLength, 4294967296, positive, Math.floor)},
+  /* eslint-disable max-len */
+    {type: 'ByteMultiArray',    values: arrayGen.generateValues(Uint8Array,   arrayLength, 256, arrayGen.positive, Math.floor)},
+    {type: 'Float32MultiArray', values: arrayGen.generateValues(Float32Array, arrayLength, 100000000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Float32MultiArray', values: arrayGen.generateValues(Float32Array, arrayLength, 10000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Float64MultiArray', values: arrayGen.generateValues(Float64Array, arrayLength, Number.MAX_VALUE, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Float64MultiArray', values: arrayGen.generateValues(Float64Array, arrayLength, 10000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Int8MultiArray',    values: arrayGen.generateValues(Int8Array,    arrayLength, 128, arrayGen.negative, Math.floor)},
+    {type: 'Int16MultiArray',   values: arrayGen.generateValues(Int16Array,   arrayLength, 32768, arrayGen.negative, Math.floor)},
+    {type: 'Int32MultiArray',   values: arrayGen.generateValues(Int32Array,   arrayLength, 2147483648, arrayGen.negative, Math.floor)},
+    {type: 'UInt8MultiArray',   values: arrayGen.generateValues(Uint8Array,   arrayLength, 256, arrayGen.positive, Math.floor)},
+    {type: 'UInt16MultiArray',  values: arrayGen.generateValues(Uint16Array,  arrayLength, 65536, arrayGen.positive, Math.floor)},
+    {type: 'UInt32MultiArray',  values: arrayGen.generateValues(Uint32Array,  arrayLength, 4294967296, arrayGen.positive, Math.floor)},
 
-    {type: 'ByteMultiArray',    values: generateValues(Array, arrayLength, 256, positive, Math.floor)},
+    {type: 'ByteMultiArray',    values: arrayGen.generateValues(Array, arrayLength, 256, arrayGen.positive, Math.floor)},
     // Note: According to IEEE 754, float32 has 6 significant decimal digits, skip float32 for now
-    // {type: 'Float32MultiArray', values: generateValues(Array, arrayLength, 100000000, negative, noRound)},
-    // {type: 'Float32MultiArray', values: generateValues(Array, arrayLength, 10000, negative, noRound)},
-    {type: 'Float64MultiArray', values: generateValues(Array, arrayLength, Number.MAX_VALUE, negative, noRound)},
-    {type: 'Float64MultiArray', values: generateValues(Array, arrayLength, 10000, negative, noRound)},
-    {type: 'Int8MultiArray',    values: generateValues(Array, arrayLength, 128, negative, Math.floor)},
-    {type: 'Int16MultiArray',   values: generateValues(Array, arrayLength, 32768, negative, Math.floor)},
-    {type: 'Int32MultiArray',   values: generateValues(Array, arrayLength, 2147483648, negative, Math.floor)},
-    {type: 'UInt8MultiArray',   values: generateValues(Array, arrayLength, 256, positive, Math.floor)},
-    {type: 'UInt16MultiArray',  values: generateValues(Array, arrayLength, 65536, positive, Math.floor)},
-    {type: 'UInt32MultiArray',  values: generateValues(Array, arrayLength, 4294967296, positive, Math.floor)},
+    // {type: 'Float32MultiArray', values: arrayGen.generateValues(Array, arrayLength, 100000000, arrayGen.negative, arrayGen.noRound)},
+    // {type: 'Float32MultiArray', values: arrayGen.generateValues(Array, arrayLength, 10000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Float64MultiArray', values: arrayGen.generateValues(Array, arrayLength, Number.MAX_VALUE, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Float64MultiArray', values: arrayGen.generateValues(Array, arrayLength, 10000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Int8MultiArray',    values: arrayGen.generateValues(Array, arrayLength, 128, arrayGen.negative, Math.floor)},
+    {type: 'Int16MultiArray',   values: arrayGen.generateValues(Array, arrayLength, 32768, arrayGen.negative, Math.floor)},
+    {type: 'Int32MultiArray',   values: arrayGen.generateValues(Array, arrayLength, 2147483648, arrayGen.negative, Math.floor)},
+    {type: 'UInt8MultiArray',   values: arrayGen.generateValues(Array, arrayLength, 256, arrayGen.positive, Math.floor)},
+    {type: 'UInt16MultiArray',  values: arrayGen.generateValues(Array, arrayLength, 65536, arrayGen.positive, Math.floor)},
+    {type: 'UInt32MultiArray',  values: arrayGen.generateValues(Array, arrayLength, 4294967296, arrayGen.positive, Math.floor)},
+  /* eslint-enable max-len */
   ].forEach((testData) => {
     const topic = testData.topic || 'topic' + testData.type;
     it('Test translation of ' + testData.type + ' msg, number of values ' + testData.values.length, function() {

@@ -18,6 +18,7 @@ const assert = require('assert');
 const childProcess = require('child_process');
 const rclnodejs = require('../index.js');
 const translator = require('../lib/message_translator.js');
+const arrayGen = require('./array_generator.js');
 
 function isTypedArray(v) {
   return ArrayBuffer.isView(v) && !(v instanceof DataView);
@@ -199,6 +200,156 @@ describe('rclnodejs message communication', function() {
         assert(msg1.data[0] == r);
         assert(msg2.data[0] == o);
       });
+    });
+  });
+
+  const uint8Data = arrayGen.generateValues(Array, 320*240*4*4, 256, arrayGen.positive, Math.floor);
+
+  [
+  /* eslint-disable camelcase */
+  /* eslint-disable key-spacing */
+  /* eslint-disable comma-spacing */
+    {
+      pkg: 'sensor_msgs', type: 'PointCloud2',
+      arrayType: Uint8Array,
+      values: [
+        {
+          header: {
+            stamp: {sec: 11223, nanosec: 44556},
+            frame_id: 'f001',
+          },
+          height: 240,
+          width: 320,
+          fields: [{}],
+          is_bigendian: false,
+          point_step: 16,
+          row_step: 320*16,
+          data: uint8Data,
+          is_dense: false,
+        },
+        {
+          header: {
+            stamp: {sec: 11223, nanosec: 44556},
+            frame_id: 'f001',
+          },
+          height: 240,
+          width: 320,
+          fields: [{}],
+          is_bigendian: false,
+          point_step: 16,
+          row_step: 320*16,
+          data: Uint8Array.from(uint8Data),
+          is_dense: false,
+        },
+      ]
+    },
+    {
+      pkg: 'sensor_msgs', type: 'Image',
+      arrayType: Uint8Array,
+      values: [
+        {
+          header: {
+            stamp: {sec: 11223, nanosec: 44556},
+            frame_id: 'f001',
+          },
+          height: 240,
+          width: 320,
+          encoding: 'rgba',
+          is_bigendian: false,
+          step: 320*16,
+          data: uint8Data,
+          is_dense: false,
+        },
+        {
+          header: {
+            stamp: {sec: 11223, nanosec: 44556},
+            frame_id: 'f001',
+          },
+          height: 240,
+          width: 320,
+          encoding: 'rgba',
+          is_bigendian: false,
+          step: 320*16,
+          data: Uint8Array.from(uint8Data),
+          is_dense: false,
+        },
+      ]
+    },
+    {
+      pkg: 'sensor_msgs', type: 'CompressedImage',
+      arrayType: Uint8Array,
+      values: [
+        {
+          header: {
+            stamp: {sec: 11223, nanosec: 44556},
+            frame_id: 'f001',
+          },
+          format: 'jpeg',
+          data: uint8Data,
+        },
+        {
+          header: {
+            stamp: {sec: 11223, nanosec: 44556},
+            frame_id: 'f001',
+          },
+          format: 'jpeg',
+          data: Uint8Array.from(uint8Data),
+        },
+      ]
+    },
+  /* eslint-enable camelcase */
+  /* eslint-enable key-spacing */
+  /* eslint-enable comma-spacing */
+  ].forEach((testData) => {
+    const topic = testData.topic || 'topic' + testData.type;
+    testData.values.forEach((v, i) => {
+      it('Make sure ' + testData.type + ' use TypedArray' +  ', case ' + i, function() {
+        const MessageType = rclnodejs.require(testData.pkg + '/msg/' + testData.type);
+        const msg = translator.toROSMessage(MessageType, v);
+        assert(isTypedArray(msg.data));
+        assert(msg.data instanceof testData.arrayType);
+      });
+    });
+  });
+
+  const arrayLength = 1024;
+  [
+  /* eslint-disable max-len */
+    {type: 'ByteMultiArray',    arrayType: Uint8Array, values: arrayGen.generateValues(Uint8Array,   arrayLength, 256, arrayGen.positive, Math.floor)},
+    {type: 'Float32MultiArray', arrayType: Float32Array, values: arrayGen.generateValues(Float32Array, arrayLength, 10000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Float64MultiArray', arrayType: Float64Array, values: arrayGen.generateValues(Float64Array, arrayLength, 10000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Int8MultiArray',    arrayType: Int8Array, values: arrayGen.generateValues(Int8Array,    arrayLength, 128, arrayGen.negative, Math.floor)},
+    {type: 'Int16MultiArray',   arrayType: Int16Array, values: arrayGen.generateValues(Int16Array,   arrayLength, 32768, arrayGen.negative, Math.floor)},
+    {type: 'Int32MultiArray',   arrayType: Int32Array, values: arrayGen.generateValues(Int32Array,   arrayLength, 2147483648, arrayGen.negative, Math.floor)},
+    {type: 'UInt8MultiArray',   arrayType: Uint8Array, values: arrayGen.generateValues(Uint8Array,   arrayLength, 256, arrayGen.positive, Math.floor)},
+    {type: 'UInt16MultiArray',  arrayType: Uint16Array, values: arrayGen.generateValues(Uint16Array,  arrayLength, 65536, arrayGen.positive, Math.floor)},
+    {type: 'UInt32MultiArray',  arrayType: Uint32Array, values: arrayGen.generateValues(Uint32Array,  arrayLength, 4294967296, arrayGen.positive, Math.floor)},
+
+    {type: 'ByteMultiArray',    arrayType: Uint8Array, values: arrayGen.generateValues(Array, arrayLength, 256, arrayGen.positive, Math.floor)},
+    {type: 'Float32MultiArray', arrayType: Float32Array, values: arrayGen.generateValues(Array, arrayLength, 10000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Float64MultiArray', arrayType: Float64Array, values: arrayGen.generateValues(Array, arrayLength, 10000, arrayGen.negative, arrayGen.noRound)},
+    {type: 'Int8MultiArray',    arrayType: Int8Array, values: arrayGen.generateValues(Array, arrayLength, 128, arrayGen.negative, Math.floor)},
+    {type: 'Int16MultiArray',   arrayType: Int16Array, values: arrayGen.generateValues(Array, arrayLength, 32768, arrayGen.negative, Math.floor)},
+    {type: 'Int32MultiArray',   arrayType: Int32Array, values: arrayGen.generateValues(Array, arrayLength, 2147483648, arrayGen.negative, Math.floor)},
+    {type: 'UInt8MultiArray',   arrayType: Uint8Array, values: arrayGen.generateValues(Array, arrayLength, 256, arrayGen.positive, Math.floor)},
+    {type: 'UInt16MultiArray',  arrayType: Uint16Array, values: arrayGen.generateValues(Array, arrayLength, 65536, arrayGen.positive, Math.floor)},
+    {type: 'UInt32MultiArray',  arrayType: Uint32Array, values: arrayGen.generateValues(Array, arrayLength, 4294967296, arrayGen.positive, Math.floor)},
+  /* eslint-enable max-len */
+  ].forEach((testData) => {
+    const topic = testData.topic || 'topic' + testData.type;
+    it('Make sure ' + testData.type + ' use TypedArray', function() {
+      const MessageType = rclnodejs.require('std_msgs/msg/' + testData.type);
+      const msg = translator.toROSMessage(MessageType, {
+          layout: {
+            dim: [
+              {label: 'length',  size: 0, stride: 0},
+            ],
+            data_offset: 0,
+          },
+          data: testData.values,
+        });
+      assert(isTypedArray(msg.data));
+      assert(msg.data instanceof testData.arrayType);
     });
   });
 });
