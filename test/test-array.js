@@ -96,7 +96,15 @@ describe('rclnodejs message communication', function() {
     {
       pkg: 'std_msgs', type: 'Int64MultiArray',
       values: [
-        {layout: layout, data: [-111, 1, 2, 3, 8, 6, 0, -25, Number.MAX_SAFE_INTEGER] }, // Provide data via Array
+        // Waiting for https://github.com/RobotWebTools/rclnodejs/issues/232 to enable this case
+        // {layout: layout, data: [-111, 1, 2, 3, 8, 6, 0, -25, Number.MAX_SAFE_INTEGER] }, // Provide data via Array
+      ]
+    },
+    {
+      pkg: 'std_msgs', type: 'ByteMultiArray',
+      values: [
+        {layout: layout, data: [0, 1, 2, 3, 8, 6, 0, 255] }, // Provide data via Array
+        {layout: layout, data: Uint8Array.from([0, 1, 2, 3, 8, 6, 0, 255]) }, // Provide data via TypedArray
       ]
     },
     {
@@ -123,7 +131,8 @@ describe('rclnodejs message communication', function() {
     {
       pkg: 'std_msgs', type: 'UInt64MultiArray',
       values: [
-        {layout: layout, data: [0, 1, 2, 3, 8, 6, 0, 255, Number.MAX_SAFE_INTEGER] }, // Provide data via Array
+        // Waiting for https://github.com/RobotWebTools/rclnodejs/issues/232 to enable this case
+        // {layout: layout, data: [0, 1, 2, 3, 8, 6, 0, 255, Number.MAX_SAFE_INTEGER] }, // Provide data via Array
       ]
     },
     {
@@ -181,11 +190,13 @@ describe('rclnodejs message communication', function() {
         checkMessage(msg2);
 
         const o = v.data[0];
+        assert(msg1.data[0] == o);
         assert(msg2.data[0] == o);
+
         const r = Math.round(Math.random() * 100);
         msg1.data[0] = r;
+
         assert(msg1.data[0] == r);
-        console.log(r, msg1.data[0], msg2.data[0], o);
         assert(msg2.data[0] == o);
       });
     });
