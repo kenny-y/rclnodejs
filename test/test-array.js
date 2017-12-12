@@ -308,6 +308,14 @@ describe('rclnodejs message communication', function() {
         const msg = translator.toROSMessage(MessageType, v);
         assert(isTypedArray(msg.data));
         assert(msg.data instanceof testData.arrayType);
+
+        msg.data = v.data;
+        assert(isTypedArray(msg.data));
+        assert(msg.data instanceof testData.arrayType);
+
+        const msg2 = new MessageType();
+        assert(isTypedArray(msg2.data));
+        assert(msg2.data instanceof testData.arrayType);
       });
     });
   });
@@ -350,6 +358,14 @@ describe('rclnodejs message communication', function() {
         });
       assert(isTypedArray(msg.data));
       assert(msg.data instanceof testData.arrayType);
+
+      msg.data = testData.values;
+      assert(isTypedArray(msg.data));
+      assert(msg.data instanceof testData.arrayType);
+
+      const msg2 = new MessageType();
+      assert(isTypedArray(msg2.data));
+      assert(msg2.data instanceof testData.arrayType);
     });
   });
 });
