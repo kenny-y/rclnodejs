@@ -348,14 +348,15 @@ describe('rclnodejs message communication', function() {
     it('Make sure ' + testData.type + ' use TypedArray', function() {
       const MessageType = rclnodejs.require('std_msgs/msg/' + testData.type);
       const msg = translator.toROSMessage(MessageType, {
-          layout: {
-            dim: [
-              {label: 'length',  size: 0, stride: 0},
-            ],
-            data_offset: 0,
-          },
-          data: testData.values,
-        });
+        layout: {
+          dim: [
+            {label: 'length',  size: 0, stride: 0},
+          ],
+          // eslint-disable-next-line
+          data_offset: 0,
+        },
+        data: testData.values,
+      });
       assert(isTypedArray(msg.data));
       assert(msg.data instanceof testData.arrayType);
 
